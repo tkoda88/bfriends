@@ -152,7 +152,7 @@ function setupSheets() {
 function initializeSession(idToken) {
   const profile  = verifyIdToken_(idToken);
   const member   = findMemberByLineId_(profile.sub);
-  const schedule = buildScheduleView_();
+  const schedule = buildScheduleView_(null, profile.sub);
   const isAdmin  = checkAdmin_(profile.sub);
   return {
     ok: true,
@@ -327,7 +327,7 @@ function submitAvailability(payload) {
       }
     });
 
-    return { ok: true, memberName: member[MC.FULL_NAME], savedAt: now, schedule: buildScheduleView_(), message: '参加予定を保存しました。' };
+    return { ok: true, memberName: member[MC.FULL_NAME], savedAt: now, schedule: buildScheduleView_(null, profile.sub), message: '参加予定を保存しました。' };
   } finally { lock.releaseLock(); }
 }
 
@@ -360,7 +360,7 @@ function markAttendance(payload) {
     });
     // 活動報告書を自動更新
     updateActivityReport_(sessionId);
-    return { ok: true, schedule: buildScheduleView_(), message: '当日参加を更新しました。' };
+    return { ok: true, schedule: buildScheduleView_(null, profile.sub), message: '当日参加を更新しました。' };
   } finally { lock.releaseLock(); }
 }
 
@@ -737,7 +737,7 @@ function markSelfAttendance(payload) {
       appendRow_(sheet, HEADERS.Responses, record);
     }
     updateActivityReport_(sessionId);
-    return { ok: true, schedule: buildScheduleView_(), message: '当日参加を登録しました。' };
+    return { ok: true, schedule: buildScheduleView_(null, profile.sub), message: '当日参加を登録しました。' };
   } finally { lock.releaseLock(); }
 }
 
@@ -1023,7 +1023,7 @@ function generateExportList(payload) {
 
 // ── スケジュールビュー ──
 
-function buildScheduleView_(monthKey) {
+function buildScheduleView_(monthKey, lineId) {
   const opsSS = getOpsSS_();
   const schedRows = readObjects_(opsSS.getSheetByName(SHEET_NAMES.SCHEDULE))
     .filter(r => r.sessionId && String(r.openForResponse).toLowerCase() !== 'false');
@@ -1033,6 +1033,7 @@ function buildScheduleView_(monthKey) {
   schedRows.forEach(r => {
     if (monthKey && r.monthKey !== monthKey) return;
     const counts = countAnswers_(respRows, r.sessionId);
+    const myResp = lineId ? respRows.find(rr => rr.sessionId === r.sessionId && rr.lineId === lineId) : null;
     if (!grouped[r.monthKey]) grouped[r.monthKey] = [];
     grouped[r.monthKey].push({
       sessionId: r.sessionId, monthKey: r.monthKey, eventDate: r.eventDate,
@@ -1040,6 +1041,8 @@ function buildScheduleView_(monthKey) {
       note: r.note || '', counts,
       statusLabel: buildStatusLabel_(counts, Number(r.minAttendees||0), Number(r.maxAttendees||0)),
       attendees: listAttendees_(respRows, r.sessionId),
+      myAnswer: myResp ? myResp.answer : 'undecided',
+      myNote: myResp ? myResp.note : '',
     });
   });
   return Object.keys(grouped).sort().map(k => ({

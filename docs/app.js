@@ -391,11 +391,11 @@ function renderSchedule(months) {
           '<span class="muted">参加 ' + s.counts.yes + ' / 不参加 ' + s.counts.no + ' / 未定 ' + s.counts.undecided + '</span>' +
         '</div></div>' +
         '<div class="answer-row">' +
-          '<label><input type="radio" name="a-' + s.sessionId + '" value="yes"> 参加</label>' +
-          '<label><input type="radio" name="a-' + s.sessionId + '" value="no"> 不参加</label>' +
-          '<label><input type="radio" name="a-' + s.sessionId + '" value="undecided" checked> 未定</label>' +
+          '<label><input type="radio" name="a-' + s.sessionId + '" value="yes"' + (s.myAnswer === 'yes' || s.myAnswer === 'attended' ? ' checked' : '') + '> 参加</label>' +
+          '<label><input type="radio" name="a-' + s.sessionId + '" value="no"' + (s.myAnswer === 'no' ? ' checked' : '') + '> 不参加</label>' +
+          '<label><input type="radio" name="a-' + s.sessionId + '" value="undecided"' + (!s.myAnswer || s.myAnswer === 'undecided' ? ' checked' : '') + '> 未定</label>' +
         '</div>' +
-        '<label class="note-field"><span>備考</span><input type="text" class="session-note-input" placeholder="任意"/></label>' +
+        '<label class="note-field"><span>備考</span><input type="text" class="session-note-input" placeholder="任意" value="' + esc(s.myNote || '') + '"/></label>' +
         (selfCheckBtn ? '<div class="actions">' + selfCheckBtn + '</div>' : '');
       sec.appendChild(art);
     });
