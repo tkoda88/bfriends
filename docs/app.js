@@ -93,7 +93,7 @@ async function loadSession() {
     const page = currentPage();
 
     if (r.memberFound && r.member) {
-      hide('messageCard');
+      if (page !== 'teams') hide('messageCard');
       if (page === 'schedule') {
         renderSchedule(r.schedule || []);
         if (r.isAdmin) { show('adminCard'); loadAdminView(); }
@@ -103,6 +103,7 @@ async function loadSession() {
         populateTeamSelect();
         doRefreshWinRates();
         if (r.isAdmin) el('exportListBtn').classList.remove('hidden');
+        showMsg('予定を選んでチーム編成してください。', 'info');
       } else if (page === 'register') {
         if (r.isAdmin) show('adminRegisterPane');
       } else if (page === 'docs') {
